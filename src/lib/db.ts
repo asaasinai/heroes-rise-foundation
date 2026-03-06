@@ -1,25 +1,17 @@
-import { Pool, type QueryResult, type QueryResultRow } from "pg";
+import { neon } from "@neondatabase/serverless";
+import type { QueryResult, QueryResultRow } from "pg";
 
-let pool: Pool | undefined;
-
-const getPool = () => {
-  if (!pool) {
-    const connectionString = process.env.POSTGRES_URL;
-    if (!connectionString) {
-      throw new Error("POSTGRES_URL is not configured.");
-    }
-    pool = new Pool({
-      connectionString,
-      ssl: { rejectUnauthorized: false },
-      max: 1,
-      idleTimeoutMillis: 10000,
-      connectionTimeoutMillis: 5000,
-    });
-  }
-  return pool;
+const getSql = () => {
+  const connectionString = process.env.POSTGRES_URL;
+  if (!connectionString) throw new Error("POSTGRES_URL is not configured.");
+  return neon(connectionString);
 };
 
 export const query = async <T extends QueryResultRow>(
   text: string,
   params?: unknown[]
-): Promise<QueryResult<T>> => getPool().query<T>(text, params);
+): Promise<QueryResult<T>> => {
+  const sql = getSql();
+  const rows = (await sql(text, params ?? [])) as T[];
+  return { rows, rowCount: rows.length } as unknown as QueryResult<T>;
+};
