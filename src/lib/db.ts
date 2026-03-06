@@ -1,30 +1,22 @@
 import { Pool, type QueryResult, type QueryResultRow } from "pg";
 
-declare global {
-  var __heroesRisePool: Pool | undefined;
-}
-
-const createPool = () => {
-  const connectionString = process.env.POSTGRES_URL;
-
-  if (!connectionString) {
-    throw new Error(
-      "POSTGRES_URL is not configured. Add it to your environment variables."
-    );
-  }
-
-  return new Pool({
-    connectionString,
-    ssl: process.env.NODE_ENV === "production" ? { rejectUnauthorized: false } : false
-  });
-};
+let pool: Pool | undefined;
 
 const getPool = () => {
-  if (!global.__heroesRisePool) {
-    global.__heroesRisePool = createPool();
+  if (!pool) {
+    const connectionString = process.env.POSTGRES_URL;
+    if (!connectionString) {
+      throw new Error("POSTGRES_URL is not configured.");
+    }
+    pool = new Pool({
+      connectionString,
+      ssl: { rejectUnauthorized: false },
+      max: 1,
+      idleTimeoutMillis: 10000,
+      connectionTimeoutMillis: 5000,
+    });
   }
-
-  return global.__heroesRisePool;
+  return pool;
 };
 
 export const query = async <T extends QueryResultRow>(
