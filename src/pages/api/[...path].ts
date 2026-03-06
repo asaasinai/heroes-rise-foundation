@@ -18,6 +18,7 @@ export default function handler(req: NextApiRequest, res: NextApiResponse) {
     // Monkey-patch express.json to use the already-parsed body
     const wrappedReq: any = Object.create(req);
     wrappedReq.body = originalBody;
+    wrappedReq._body = true; // Tell express body-parser to skip re-reading the stream
 
     app(wrappedReq, res as any, (err: unknown) => {
       if (err) reject(err);
