@@ -568,6 +568,23 @@ app.put("/api/admin/content", async (req, res, next) => {
   }
 });
 
+app.post("/api/admin/reset-password-once", async (req, res, next) => {
+  try {
+    const { secret, email, password } = req.body ?? {};
+    const resetSecret = process.env.RESET_SECRET;
+    if (!resetSecret || secret !== resetSecret) return sendError(res, 403, "Forbidden.");
+    if (!email || !password || password.length < 8) return sendError(res, 400, "Invalid payload.");
+
+    const { hashPassword } = await import("@/lib/auth");
+    const hash = await hashPassword(password);
+    const result = await query("UPDATE admin_users SET password_hash = $1 WHERE email = $2 RETURNING id", [hash, email]);
+    if (!result.rows[0]) return sendError(res, 404, "User not found.");
+    return res.status(200).json({ data: { updated: true } });
+  } catch (error) {
+    return next(error);
+  }
+});
+
 app.use((_req, res) => sendError(res, 404, "Endpoint not found."));
 
 app.use((error: unknown, _req: Request, res: Response, _next: NextFunction) => {
