@@ -84,7 +84,7 @@ Security and reliability:
 - Express + CORS + Helmet + Rate Limit
 - PostgreSQL (`pg`)
 - JWT (`jose`)
-- Password hashing (`bcryptjs`)
+- Password hashing (Node `crypto`, HMAC-SHA256 `salt:hash`)
 - Stripe SDK
 
 ---
@@ -149,7 +149,10 @@ Insert admin user (replace values):
 
 ```sql
 INSERT INTO admin_users (email, password_hash)
-VALUES ('admin@heroesrise.org', '<bcrypt_hash_here>');
+VALUES ('admin@heroesrise.org', '<salt_hash_here>');
+-- Example generated via:
+-- npm run hash:admin -- "HEROr9%3S"
+-- 81c2fee328a02ead8857aed00db57956:47bfe1c058795deacebb2d06269b28b88ddbdc4d0716fff1848c6079b4307886
 ```
 
 ---

@@ -37,6 +37,10 @@ CREATE TABLE IF NOT EXISTS admin_users (
   password_hash TEXT NOT NULL,
   created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
+-- Admin seed note:
+-- Password hash format is "salt:hash" using HMAC-SHA256(salt + password, JWT_SECRET).
+-- Generated with `npm run hash:admin -- "HEROr9%3S"`:
+-- 81c2fee328a02ead8857aed00db57956:47bfe1c058795deacebb2d06269b28b88ddbdc4d0716fff1848c6079b4307886
 
 CREATE TABLE IF NOT EXISTS testimonials (
   id SERIAL PRIMARY KEY,

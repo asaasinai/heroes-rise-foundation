@@ -1,4 +1,4 @@
-import bcrypt from "bcryptjs";
+import { createHmac, randomBytes, timingSafeEqual } from "crypto";
 import { SignJWT, jwtVerify, type JWTPayload } from "jose";
 
 const getJwtSecret = () => {
@@ -32,6 +32,22 @@ export const verifyAdminToken = async (token: string) => {
   return payload as unknown as AdminJwtPayload;
 };
 
-export const hashPassword = async (password: string) => bcrypt.hash(password, 10);
-export const verifyPassword = async (password: string, hash: string) =>
-  bcrypt.compare(password, hash);
+// Hash format: "salt:hash" where hash = HMAC-SHA256(salt + password, JWT_SECRET)
+export const hashPassword = (password: string): string => {
+  const salt = randomBytes(16).toString("hex");
+  const secret = process.env.JWT_SECRET ?? "fallback";
+  const hash = createHmac("sha256", secret).update(salt + password).digest("hex");
+  return `${salt}:${hash}`;
+};
+
+export const verifyPassword = (password: string, stored: string): boolean => {
+  const [salt, storedHash] = stored.split(":");
+  if (!salt || !storedHash) return false;
+  const secret = process.env.JWT_SECRET ?? "fallback";
+  const hash = createHmac("sha256", secret).update(salt + password).digest("hex");
+  try {
+    return timingSafeEqual(Buffer.from(hash), Buffer.from(storedHash));
+  } catch {
+    return false;
+  }
+};
