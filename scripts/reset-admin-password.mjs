@@ -1,4 +1,4 @@
-import bcrypt from "bcryptjs";
+import { createHmac, randomBytes } from "crypto";
 import pg from "pg";
 
 const [, , email, password] = process.argv;
@@ -19,13 +19,16 @@ const { Client } = pg;
 const client = new Client({ connectionString: databaseUrl });
 
 try {
-  const passwordHash = await bcrypt.hash(password, 10);
+  const salt = randomBytes(16).toString("hex");
+  const secret = process.env.JWT_SECRET ?? "fallback";
+  const passwordHash = createHmac("sha256", secret).update(salt + password).digest("hex");
+  const storedHash = `${salt}:${passwordHash}`;
 
   await client.connect();
 
   const result = await client.query(
     "UPDATE admin_users SET password_hash = $1 WHERE email = $2",
-    [passwordHash, email],
+    [storedHash, email],
   );
 
   if (result.rowCount !== 1) {

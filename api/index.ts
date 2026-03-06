@@ -5,7 +5,7 @@ import rateLimit from "express-rate-limit";
 import Stripe from "stripe";
 import { query } from "@/lib/db";
 import { sanitizeText } from "@/lib/sanitize";
-import { signAdminToken, verifyAdminToken, verifyPassword } from "@/lib/auth";
+import { hashPassword, signAdminToken, verifyAdminToken, verifyPassword } from "@/lib/auth";
 import {
   cmsSchema,
   contactSchema,
@@ -160,7 +160,7 @@ app.post("/api/auth/login", async (req, res, next) => {
 
     if (!adminUser.rows[0]) return sendError(res, 401, "Invalid email or password.");
 
-    const validPassword = await verifyPassword(parsed.data.password, adminUser.rows[0].password_hash);
+    const validPassword = verifyPassword(parsed.data.password, adminUser.rows[0].password_hash);
     if (!validPassword) return sendError(res, 401, "Invalid email or password.");
 
     const token = await signAdminToken({
@@ -573,11 +573,13 @@ app.post("/api/admin/reset-password-once", async (req, res, next) => {
     const { secret, email, password } = req.body ?? {};
     const resetSecret = process.env.RESET_SECRET;
     if (!resetSecret || secret !== resetSecret) return sendError(res, 403, "Forbidden.");
-    if (!email || !password || password.length < 8) return sendError(res, 400, "Invalid payload.");
+    if (typeof email !== "string" || typeof password !== "string" || password.length < 8) {
+      return sendError(res, 400, "Invalid payload.");
+    }
 
-    const { hashPassword } = await import("@/lib/auth");
-    const hash = await hashPassword(password);
-    const result = await query("UPDATE admin_users SET password_hash = $1 WHERE email = $2 RETURNING id", [hash, email]);
+    const hash = hashPassword(password);
+    const normalizedEmail = sanitizeText(email.toLowerCase());
+    const result = await query("UPDATE admin_users SET password_hash = $1 WHERE email = $2 RETURNING id", [hash, normalizedEmail]);
     if (!result.rows[0]) return sendError(res, 404, "User not found.");
     return res.status(200).json({ data: { updated: true } });
   } catch (error) {

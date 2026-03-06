@@ -1,4 +1,4 @@
-import bcrypt from "bcryptjs";
+import { createHmac, randomBytes } from "crypto";
 
 const password = process.argv[2];
 
@@ -7,5 +7,8 @@ if (!password || password.length < 8) {
   process.exit(1);
 }
 
-const hash = await bcrypt.hash(password, 12);
-console.log(hash);
+const salt = randomBytes(16).toString("hex");
+const secret = process.env.JWT_SECRET ?? "fallback";
+const hash = createHmac("sha256", secret).update(salt + password).digest("hex");
+
+console.log(`${salt}:${hash}`);
