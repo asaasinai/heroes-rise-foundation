@@ -32,6 +32,6 @@ export const verifyAdminToken = async (token: string) => {
   return payload as unknown as AdminJwtPayload;
 };
 
-export const hashPassword = async (password: string) => bcrypt.hash(password, 12);
+export const hashPassword = async (password: string) => bcrypt.hash(password, 10);
 export const verifyPassword = async (password: string, hash: string) =>
   bcrypt.compare(password, hash);
