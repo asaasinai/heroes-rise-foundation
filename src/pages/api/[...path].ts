@@ -1,6 +1,8 @@
 import type { NextApiRequest, NextApiResponse } from "next";
 import app from "../../../api/index";
 
+export const maxDuration = 30;
+
 export const config = {
   api: {
     bodyParser: {
