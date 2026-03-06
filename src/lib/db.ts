@@ -2,12 +2,11 @@ import { neon } from "@neondatabase/serverless";
 import type { QueryResult, QueryResultRow } from "pg";
 
 const getSql = () => {
-  const connectionString = process.env.POSTGRES_URL;
-  if (!connectionString) throw new Error("POSTGRES_URL is not configured.");
+  const connectionString = process.env.HR_POSTGRES_URL ?? process.env.POSTGRES_URL;
+  if (!connectionString) throw new Error("HR_POSTGRES_URL is not configured.");
   return neon(connectionString);
 };
 
-// Build a tagged template from a plain SQL string + params
 export const query = async <T extends QueryResultRow>(
   text: string,
   params?: unknown[]
