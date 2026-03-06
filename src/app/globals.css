@@ -1,13 +1,17 @@
 @import "tailwindcss";
 
 :root {
-  --bg: #f4f9fb;
-  --card: #ffffff;
-  --text: #0f172a;
-  --muted: #475569;
-  --brand: #1d4ed8;
-  --brand-soft: #0ea5a4;
-  --accent: #f59e0b;
+  --bg: #0b1011;
+  --bg-alt: #111a1c;
+  --card: #141e20;
+  --card-border: #1f2e2a;
+  --text: #e2ddd5;
+  --muted: #8a8579;
+  --brand: #556b2f;
+  --brand-light: #6b8c42;
+  --accent: #c9a84c;
+  --accent-light: #dbbe66;
+  --danger: #8b2635;
 }
 
 * {
@@ -34,5 +38,5 @@ a {
 }
 
 .card {
-  @apply rounded-2xl border border-slate-200 bg-white shadow-sm;
+  @apply rounded-xl border border-[var(--card-border)] bg-[var(--card)] shadow-lg;
 }

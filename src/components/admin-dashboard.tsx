@@ -15,6 +15,13 @@ const authHeaders = (token: string) => ({
   Authorization: `Bearer ${token}`
 });
 
+const inputClass =
+  "w-full rounded-md border border-[var(--card-border)] bg-[var(--bg)] px-3 py-2 text-[var(--text)] outline-none placeholder:text-neutral-600 focus:border-[var(--accent)]";
+const btnPrimary =
+  "rounded-md bg-[var(--accent)] px-4 py-2 font-bold uppercase tracking-wide text-[#0b1011] transition hover:bg-[var(--accent-light)]";
+const btnSecondary =
+  "rounded-md bg-[var(--brand-light)] px-4 py-2 font-semibold text-white transition hover:bg-[var(--brand)]";
+
 export default function AdminDashboard() {
   const [token, setToken] = useState<string>(() => {
     if (typeof window === "undefined") return "";
@@ -178,15 +185,15 @@ export default function AdminDashboard() {
   if (!token) {
     return (
       <main className="mx-auto min-h-screen max-w-xl px-4 py-16">
-        <h1 className="text-3xl font-bold">Admin Login</h1>
-        <form onSubmit={handleLogin} className="mt-6 space-y-3 rounded-2xl border bg-white p-6">
+        <h1 className="text-3xl font-bold text-white">Admin Login</h1>
+        <form onSubmit={handleLogin} className="mt-6 card space-y-3 p-6">
           <input
             type="email"
             value={email}
             onChange={(event) => setEmail(event.target.value)}
             required
             placeholder="Admin email"
-            className="w-full rounded-lg border px-3 py-2"
+            className={inputClass}
           />
           <input
             type="password"
@@ -194,12 +201,12 @@ export default function AdminDashboard() {
             onChange={(event) => setPassword(event.target.value)}
             required
             placeholder="Password"
-            className="w-full rounded-lg border px-3 py-2"
+            className={inputClass}
           />
-          <button type="submit" className="rounded-lg bg-blue-700 px-4 py-2 font-medium text-white">
+          <button type="submit" className={btnPrimary}>
             Sign In
           </button>
-          <p className="text-sm text-slate-600">{status}</p>
+          <p className="text-sm text-[var(--muted)]">{status}</p>
         </form>
       </main>
     );
@@ -208,22 +215,22 @@ export default function AdminDashboard() {
   return (
     <main className="mx-auto max-w-5xl space-y-8 px-4 py-12">
       <header className="flex items-center justify-between">
-        <h1 className="text-3xl font-bold">Heroes Rise Admin Dashboard</h1>
+        <h1 className="text-3xl font-bold text-white">Heroes Rise Admin Dashboard</h1>
         <button
           type="button"
           onClick={() => {
             localStorage.removeItem("heroes-rise-admin-token");
             setToken("");
           }}
-          className="rounded-lg border px-4 py-2"
+          className="rounded-md border border-[var(--card-border)] px-4 py-2 text-[var(--muted)] transition hover:border-[var(--accent)] hover:text-[var(--accent)]"
         >
           Sign out
         </button>
       </header>
-      <p className="text-sm text-slate-600">{status}</p>
+      <p className="text-sm text-[var(--accent)]">{status}</p>
 
-      <section className="rounded-2xl border bg-white p-6">
-        <h2 className="text-xl font-semibold">Impact Metrics</h2>
+      <section className="card p-6">
+        <h2 className="text-xl font-bold text-white">Impact Metrics</h2>
         <div className="mt-4 space-y-3">
           {metrics.map((metric, index) => (
             <div key={metric.id} className="grid gap-2 md:grid-cols-[1fr_160px_2fr]">
@@ -236,7 +243,7 @@ export default function AdminDashboard() {
                     )
                   )
                 }
-                className="rounded border px-3 py-2"
+                className={inputClass}
               />
               <input
                 type="number"
@@ -248,7 +255,7 @@ export default function AdminDashboard() {
                     )
                   )
                 }
-                className="rounded border px-3 py-2"
+                className={inputClass}
               />
               <input
                 value={metric.description}
@@ -259,7 +266,7 @@ export default function AdminDashboard() {
                     )
                   )
                 }
-                className="rounded border px-3 py-2"
+                className={inputClass}
               />
             </div>
           ))}
@@ -278,71 +285,71 @@ export default function AdminDashboard() {
               }
             ])
           }
-          className="mt-4 rounded border px-3 py-2"
+          className="mt-4 rounded-md border border-[var(--card-border)] px-3 py-2 text-[var(--muted)] transition hover:border-[var(--accent)] hover:text-[var(--accent)]"
         >
           Add Metric Row
         </button>
-        <button type="button" onClick={saveMetrics} className="mt-4 ml-3 rounded bg-blue-700 px-4 py-2 text-white">
+        <button type="button" onClick={saveMetrics} className={`mt-4 ml-3 ${btnPrimary}`}>
           Save Metrics
         </button>
       </section>
 
       <section className="grid gap-6 md:grid-cols-2">
-        <article className="rounded-2xl border bg-white p-6">
-          <h2 className="text-xl font-semibold">Create Story</h2>
+        <article className="card p-6">
+          <h2 className="text-xl font-bold text-white">Create Story</h2>
           <form className="mt-3 space-y-2" onSubmit={createStory}>
-            <input name="title" required placeholder="Title" className="w-full rounded border px-3 py-2" />
+            <input name="title" required placeholder="Title" className={inputClass} />
             <textarea
               name="content"
               required
               rows={4}
               placeholder="Story content"
-              className="w-full rounded border px-3 py-2"
+              className={inputClass}
             />
             <input
               name="image_url"
               required
               placeholder="Image URL"
-              className="w-full rounded border px-3 py-2"
+              className={inputClass}
             />
-            <button type="submit" className="rounded bg-teal-700 px-4 py-2 text-white">
+            <button type="submit" className={btnSecondary}>
               Publish Story
             </button>
           </form>
           <ul className="mt-4 space-y-2 text-sm">
             {stories.map((story) => (
-              <li key={story.id} className="rounded border px-3 py-2">
+              <li key={story.id} className="rounded-md border border-[var(--card-border)] px-3 py-2 text-[var(--muted)]">
                 {story.title}
               </li>
             ))}
           </ul>
         </article>
 
-        <article className="rounded-2xl border bg-white p-6">
-          <h2 className="text-xl font-semibold">Create Testimonial</h2>
+        <article className="card p-6">
+          <h2 className="text-xl font-bold text-white">Create Testimonial</h2>
           <form className="mt-3 space-y-2" onSubmit={createTestimonial}>
-            <input name="name" required placeholder="Name" className="w-full rounded border px-3 py-2" />
-            <input name="role" required placeholder="Role" className="w-full rounded border px-3 py-2" />
+            <input name="name" required placeholder="Name" className={inputClass} />
+            <input name="role" required placeholder="Role" className={inputClass} />
             <textarea
               name="story"
               required
               rows={4}
               placeholder="Testimonial"
-              className="w-full rounded border px-3 py-2"
+              className={inputClass}
             />
             <input
               name="image_url"
               required
               placeholder="Image URL"
-              className="w-full rounded border px-3 py-2"
+              className={inputClass}
             />
-            <button type="submit" className="rounded bg-teal-700 px-4 py-2 text-white">
+            <button type="submit" className={btnSecondary}>
               Publish Testimonial
             </button>
           </form>
           <ul className="mt-4 space-y-2 text-sm">
             {testimonials.map((testimonial) => (
-              <li key={testimonial.id} className="rounded border px-3 py-2">
+              <li key={testimonial.id} className="rounded-md border border-[var(--card-border)] px-3 py-2 text-[var(--muted)]">
                 {testimonial.name} — {testimonial.role}
               </li>
             ))}
@@ -350,15 +357,15 @@ export default function AdminDashboard() {
         </article>
       </section>
 
-      <section className="rounded-2xl border bg-white p-6">
-        <h2 className="text-xl font-semibold">Simple CMS (Homepage Mission Text)</h2>
+      <section className="card p-6">
+        <h2 className="text-xl font-bold text-white">Simple CMS (Homepage Mission Text)</h2>
         <textarea
           rows={5}
           value={missionText}
           onChange={(event) => setMissionText(event.target.value)}
-          className="mt-3 w-full rounded border px-3 py-2"
+          className={`mt-3 ${inputClass}`}
         />
-        <button type="button" onClick={saveCms} className="mt-3 rounded bg-blue-700 px-4 py-2 text-white">
+        <button type="button" onClick={saveCms} className={`mt-3 ${btnPrimary}`}>
           Save Content
         </button>
       </section>
