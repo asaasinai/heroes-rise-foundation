@@ -195,7 +195,7 @@ export default function Homepage() {
   return (
     <main className="min-h-screen bg-[var(--bg)] text-[var(--text)]">
       {/* ── Header ── */}
-      <header className="sticky top-0 z-30 border-b border-[var(--card-border)] bg-[#0b1011]/95 backdrop-blur">
+      <header className="sticky top-0 z-30 border-b border-[var(--card-border)] bg-[#0a0a0a]/95 backdrop-blur">
         <div className="section-shell flex h-16 items-center justify-between">
           <a href="#top" className="font-bold tracking-wider uppercase text-[var(--accent)]">
             Heroes Rise Foundation
@@ -210,7 +210,7 @@ export default function Homepage() {
           <button
             type="button"
             onClick={() => void startDonationCheckout("one_time")}
-            className="rounded-md bg-[var(--accent)] px-4 py-2 text-sm font-bold uppercase tracking-wide text-[#0b1011] transition hover:bg-[var(--accent-light)]"
+            className="rounded-md bg-[var(--accent)] px-4 py-2 text-sm font-bold uppercase tracking-wide text-[#0a0a0a] transition hover:bg-[var(--accent-light)]"
           >
             Support the Mission
           </button>
@@ -226,7 +226,7 @@ export default function Homepage() {
           priority
           className="-z-20 object-cover"
         />
-        <div className="absolute inset-0 -z-10 bg-gradient-to-r from-[#0b1011]/90 via-[#0b1011]/75 to-[#0b1011]/50" />
+        <div className="absolute inset-0 -z-10 bg-gradient-to-r from-[#0a0a0a]/90 via-[#0a0a0a]/75 to-[#0a0a0a]/50" />
         <div className="section-shell grid min-h-[82vh] items-center py-16 md:py-24">
           <motion.div
             initial="hidden"
@@ -250,7 +250,7 @@ export default function Homepage() {
                 type="button"
                 onClick={() => void startDonationCheckout("one_time")}
                 disabled={donationLoading}
-                className="rounded-md bg-[var(--accent)] px-6 py-3 font-bold uppercase tracking-wide text-[#0b1011] transition hover:bg-[var(--accent-light)] disabled:opacity-70"
+                className="rounded-md bg-[var(--accent)] px-6 py-3 font-bold uppercase tracking-wide text-[#0a0a0a] transition hover:bg-[var(--accent-light)] disabled:opacity-70"
               >
                 {donationLoading ? "Preparing..." : "Support Now"}
               </button>
@@ -391,7 +391,7 @@ export default function Homepage() {
       {/* ── Get Involved ── */}
       <motion.section
         id="involved"
-        className="bg-gradient-to-br from-[#1a2a18] via-[#1c2b1e] to-[#0f1a12] py-16 md:py-24"
+        className="bg-gradient-to-br from-[#1a1510] via-[#1c1812] to-[#12100c] py-16 md:py-24"
         initial="hidden"
         whileInView="visible"
         viewport={{ once: true, amount: 0.2 }}
@@ -414,7 +414,7 @@ export default function Homepage() {
               type="button"
               onClick={() => void startDonationCheckout("one_time")}
               disabled={donationLoading}
-              className="rounded-md bg-[var(--accent)] px-5 py-3 font-bold uppercase tracking-wide text-[#0b1011] transition hover:bg-[var(--accent-light)] disabled:opacity-70"
+              className="rounded-md bg-[var(--accent)] px-5 py-3 font-bold uppercase tracking-wide text-[#0a0a0a] transition hover:bg-[var(--accent-light)] disabled:opacity-70"
             >
               One-Time Donation
             </button>

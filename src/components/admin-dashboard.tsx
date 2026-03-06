@@ -18,7 +18,7 @@ const authHeaders = (token: string) => ({
 const inputClass =
   "w-full rounded-md border border-[var(--card-border)] bg-[var(--bg)] px-3 py-2 text-[var(--text)] outline-none placeholder:text-neutral-600 focus:border-[var(--accent)]";
 const btnPrimary =
-  "rounded-md bg-[var(--accent)] px-4 py-2 font-bold uppercase tracking-wide text-[#0b1011] transition hover:bg-[var(--accent-light)]";
+  "rounded-md bg-[var(--accent)] px-4 py-2 font-bold uppercase tracking-wide text-[#0a0a0a] transition hover:bg-[var(--accent-light)]";
 const btnSecondary =
   "rounded-md bg-[var(--brand-light)] px-4 py-2 font-semibold text-white transition hover:bg-[var(--brand)]";
 
