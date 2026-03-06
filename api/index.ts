@@ -133,6 +133,19 @@ app.get("/api/health", (_req, res) => {
   });
 });
 
+app.get("/api/content/:slug", async (req, res, next) => {
+  try {
+    const slug = sanitizeText(req.params.slug);
+    const result = await query<{ id: number; slug: string; content: Record<string, unknown>; updated_at: string }>(
+      "SELECT id, slug, content, updated_at FROM site_content WHERE slug = $1 LIMIT 1",
+      [slug]
+    );
+    res.status(200).json({ data: result.rows[0] ?? null });
+  } catch (error) {
+    next(error);
+  }
+});
+
 app.post("/api/auth/login", async (req, res, next) => {
   try {
     const parsed = loginSchema.safeParse(req.body);

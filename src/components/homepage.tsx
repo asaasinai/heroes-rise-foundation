@@ -3,56 +3,24 @@
 import Image from "next/image";
 import { motion } from "framer-motion";
 import { FormEvent, useEffect, useMemo, useState } from "react";
-import { fallbackMetrics, fallbackStories, fallbackTestimonials, navLinks } from "@/lib/constants";
-import type { ImpactMetric, Story, Testimonial } from "@/lib/types";
+import {
+  defaultSiteContent,
+  fallbackMetrics,
+  fallbackStories,
+  fallbackTestimonials,
+  navLinks
+} from "@/lib/constants";
+import type { ImpactMetric, SiteContent, Story, Testimonial } from "@/lib/types";
 
 const fadeIn = {
   hidden: { opacity: 0, y: 18 },
   visible: { opacity: 1, y: 0 }
 };
 
-const serviceCards = [
-  {
-    title: "Veteran & Military Family Relief",
-    description:
-      "Emergency grants, housing stabilization, employment transition support, and mental health resource referrals for veterans and their families.",
-    image:
-      "https://images.unsplash.com/photo-1511988617509-a57c8a288659?auto=format&fit=crop&w=1200&q=80"
-  },
-  {
-    title: "Service Dog & Animal Rescue",
-    description:
-      "Rescue response, veterinary aid, and service-dog pairing programs that reconnect veterans with companionship and therapeutic support.",
-    image:
-      "https://images.pexels.com/photos/4587996/pexels-photo-4587996.jpeg?auto=compress&cs=tinysrgb&w=1200"
-  },
-  {
-    title: "Community Operations",
-    description:
-      "Coordinated volunteer deployments, fundraising operations, and partnerships with veteran service organizations to maximize impact.",
-    image:
-      "https://images.unsplash.com/photo-1559027615-cd4628902d4a?auto=format&fit=crop&w=1200&q=80"
-  }
-];
-
-const involvedCards = [
-  {
-    title: "Donate",
-    text: "Fund direct relief for veteran families and rescue operations."
-  },
-  {
-    title: "Volunteer",
-    text: "Join our ranks — outreach teams, event ops, and transport missions."
-  },
-  {
-    title: "Partner",
-    text: "Align your organization with a proven veteran support mission."
-  }
-];
-
 const formatMetricValue = (value: number) => value.toLocaleString();
 
 export default function Homepage() {
+  const [site, setSite] = useState<SiteContent>(defaultSiteContent);
   const [metrics, setMetrics] = useState<ImpactMetric[]>(fallbackMetrics);
   const [stories, setStories] = useState<Story[]>(fallbackStories);
   const [testimonials, setTestimonials] = useState<Testimonial[]>(fallbackTestimonials);
@@ -73,25 +41,30 @@ export default function Homepage() {
   useEffect(() => {
     const loadData = async () => {
       try {
-        const [metricsRes, storiesRes, testimonialsRes] = await Promise.all([
+        const [metricsRes, storiesRes, testimonialsRes, contentRes] = await Promise.all([
           fetch("/api/impact-metrics"),
           fetch("/api/stories"),
-          fetch("/api/testimonials")
+          fetch("/api/testimonials"),
+          fetch("/api/content/site-content")
         ]);
 
         if (metricsRes.ok) {
-          const metricsData = (await metricsRes.json()) as { data: ImpactMetric[] };
-          if (metricsData.data.length > 0) setMetrics(metricsData.data);
+          const d = (await metricsRes.json()) as { data: ImpactMetric[] };
+          if (d.data.length > 0) setMetrics(d.data);
         }
-
         if (storiesRes.ok) {
-          const storyData = (await storiesRes.json()) as { data: Story[] };
-          if (storyData.data.length > 0) setStories(storyData.data);
+          const d = (await storiesRes.json()) as { data: Story[] };
+          if (d.data.length > 0) setStories(d.data);
         }
-
         if (testimonialsRes.ok) {
-          const testimonialData = (await testimonialsRes.json()) as { data: Testimonial[] };
-          if (testimonialData.data.length > 0) setTestimonials(testimonialData.data);
+          const d = (await testimonialsRes.json()) as { data: Testimonial[] };
+          if (d.data.length > 0) setTestimonials(d.data);
+        }
+        if (contentRes.ok) {
+          const d = (await contentRes.json()) as { data?: { content?: Partial<SiteContent> } };
+          if (d.data?.content) {
+            setSite((prev) => mergeSiteContent(prev, d.data!.content!));
+          }
         }
       } catch {
         // Render fallback content when API is unavailable.
@@ -107,27 +80,23 @@ export default function Homepage() {
     const interval = setInterval(() => {
       setActiveTestimonial((prev) => (prev + 1) % testimonials.length);
     }, 5000);
-
     return () => clearInterval(interval);
   }, [testimonials.length]);
 
   const handleSubscribe = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     setNewsletterStatus("Submitting...");
-
     try {
-      const response = await fetch("/api/subscribers", {
+      const res = await fetch("/api/subscribers", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email: subscriberEmail })
       });
-
-      const body = (await response.json()) as { error?: string };
-      if (!response.ok) {
+      const body = (await res.json()) as { error?: string };
+      if (!res.ok) {
         setNewsletterStatus(body.error ?? "Unable to subscribe right now.");
         return;
       }
-
       setNewsletterStatus("Thank you for joining our mission.");
       setSubscriberEmail("");
     } catch {
@@ -139,27 +108,23 @@ export default function Homepage() {
     event.preventDefault();
     setContactLoading(true);
     setContactStatus("Sending your message...");
-
-    const formData = new FormData(event.currentTarget);
+    const fd = new FormData(event.currentTarget);
     const payload = {
-      name: String(formData.get("name") ?? ""),
-      email: String(formData.get("email") ?? ""),
-      message: String(formData.get("message") ?? "")
+      name: String(fd.get("name") ?? ""),
+      email: String(fd.get("email") ?? ""),
+      message: String(fd.get("message") ?? "")
     };
-
     try {
-      const response = await fetch("/api/contact", {
+      const res = await fetch("/api/contact", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(payload)
       });
-
-      const body = (await response.json()) as { error?: string };
-      if (!response.ok) {
+      const body = (await res.json()) as { error?: string };
+      if (!res.ok) {
         setContactStatus(body.error ?? "Unable to send. Please try again.");
         return;
       }
-
       setContactStatus("Message received. Our team will reach out soon.");
       event.currentTarget.reset();
     } catch {
@@ -172,18 +137,16 @@ export default function Homepage() {
   const startDonationCheckout = async (interval: "one_time" | "monthly") => {
     setDonationLoading(true);
     try {
-      const response = await fetch("/api/donations/checkout-session", {
+      const res = await fetch("/api/donations/checkout-session", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ interval, amount: 5000 })
       });
-
-      const body = (await response.json()) as { data?: { checkoutUrl?: string }; error?: string };
-      if (!response.ok || !body.data?.checkoutUrl) {
+      const body = (await res.json()) as { data?: { checkoutUrl?: string }; error?: string };
+      if (!res.ok || !body.data?.checkoutUrl) {
         alert(body.error ?? "Donation service is currently unavailable.");
         return;
       }
-
       window.location.href = body.data.checkoutUrl;
     } catch {
       alert("Unable to begin checkout at this time.");
@@ -198,7 +161,7 @@ export default function Homepage() {
       <header className="sticky top-0 z-30 border-b border-[var(--card-border)] bg-[#0a0a0a]/95 backdrop-blur">
         <div className="section-shell flex h-16 items-center justify-between">
           <a href="#top" className="font-bold tracking-wider uppercase text-[var(--accent)]">
-            Heroes Rise Foundation
+            {site.footer.org_name}
           </a>
           <nav className="hidden gap-6 text-sm text-[var(--muted)] md:flex">
             {navLinks.map((link) => (
@@ -220,7 +183,7 @@ export default function Homepage() {
       {/* ── Hero ── */}
       <section id="top" className="relative isolate overflow-hidden">
         <Image
-          src="https://images.unsplash.com/photo-1472653431158-6364773b2a56?auto=format&fit=crop&w=1600&q=80"
+          src={site.hero.background_image}
           alt="Veterans standing together in solidarity"
           fill
           priority
@@ -236,14 +199,13 @@ export default function Homepage() {
             className="max-w-3xl"
           >
             <p className="mb-4 inline-flex rounded-md border border-[var(--accent)]/40 bg-[var(--accent)]/10 px-4 py-2 text-sm font-semibold uppercase tracking-widest text-[var(--accent)]">
-              Heroes Rise Foundation
+              {site.hero.badge}
             </p>
             <h1 className="text-4xl font-black leading-tight tracking-tight text-white md:text-6xl">
-              Standing With Those Who Stood For Us.
+              {site.hero.tagline}
             </h1>
             <p className="mt-6 max-w-2xl text-lg leading-relaxed text-neutral-300">
-              We deploy direct aid, transition resources, and community support for veterans and
-              military families. No one who served should face their battles alone.
+              {site.hero.subtitle}
             </p>
             <div className="mt-8 flex flex-wrap gap-4">
               <button
@@ -252,13 +214,13 @@ export default function Homepage() {
                 disabled={donationLoading}
                 className="rounded-md bg-[var(--accent)] px-6 py-3 font-bold uppercase tracking-wide text-[#0a0a0a] transition hover:bg-[var(--accent-light)] disabled:opacity-70"
               >
-                {donationLoading ? "Preparing..." : "Support Now"}
+                {donationLoading ? "Preparing..." : site.hero.cta_primary}
               </button>
               <a
                 href="#involved"
                 className="rounded-md border border-white/30 px-6 py-3 font-semibold text-white transition hover:border-white/60 hover:bg-white/5"
               >
-                Join Our Ranks
+                {site.hero.cta_secondary}
               </a>
             </div>
           </motion.div>
@@ -277,17 +239,17 @@ export default function Homepage() {
       >
         <div className="grid gap-8 lg:grid-cols-5 lg:items-start">
           <div className="lg:col-span-2">
-            <h2 className="text-3xl font-bold tracking-tight text-white md:text-4xl">Our Mission</h2>
-            <p className="mt-4 leading-7 text-[var(--muted)]">
-              Heroes Rise Foundation is a veteran-led organization connecting military families with
-              critical resources. We work alongside VA partners, local communities, and fellow
-              service organizations to deliver practical aid where it matters most.
-            </p>
+            <h2 className="text-3xl font-bold tracking-tight text-white md:text-4xl">
+              {site.about.heading}
+            </h2>
+            <p className="mt-4 leading-7 text-[var(--muted)]">{site.about.description}</p>
           </div>
           <div className="grid gap-4 sm:grid-cols-3 lg:col-span-3">
             {metrics.map((metric) => (
               <article key={metric.id} className="card p-5">
-                <p className="text-3xl font-black text-[var(--accent)]">{formatMetricValue(metric.value)}+</p>
+                <p className="text-3xl font-black text-[var(--accent)]">
+                  {formatMetricValue(metric.value)}+
+                </p>
                 <h3 className="mt-2 font-semibold text-white">{metric.metric_name}</h3>
                 <p className="mt-2 text-sm text-[var(--muted)]">{metric.description}</p>
               </article>
@@ -307,10 +269,12 @@ export default function Homepage() {
         transition={{ duration: 0.5 }}
       >
         <div className="section-shell">
-          <h2 className="text-3xl font-bold tracking-tight text-white md:text-4xl">How We Serve</h2>
-          <p className="mt-3 text-[var(--muted)]">Three operational pillars driving real-world impact.</p>
+          <h2 className="text-3xl font-bold tracking-tight text-white md:text-4xl">
+            {site.services.heading}
+          </h2>
+          <p className="mt-3 text-[var(--muted)]">{site.services.subtitle}</p>
           <div className="mt-8 grid gap-6 md:grid-cols-3">
-            {serviceCards.map((service) => (
+            {site.services.cards.map((service) => (
               <article key={service.title} className="card overflow-hidden">
                 <div className="relative h-44">
                   <Image src={service.image} alt={service.title} fill className="object-cover" />
@@ -318,7 +282,9 @@ export default function Homepage() {
                 </div>
                 <div className="p-5">
                   <h3 className="text-lg font-bold text-white">{service.title}</h3>
-                  <p className="mt-2 text-sm leading-6 text-[var(--muted)]">{service.description}</p>
+                  <p className="mt-2 text-sm leading-6 text-[var(--muted)]">
+                    {service.description}
+                  </p>
                 </div>
               </article>
             ))}
@@ -338,7 +304,8 @@ export default function Homepage() {
       >
         <h2 className="text-3xl font-bold tracking-tight text-white md:text-4xl">Our Heroes</h2>
         <p className="mt-4 max-w-3xl text-[var(--muted)]">
-          Stories of resilience from veteran families, volunteers, and the teams on the front lines of this mission.
+          Stories of resilience from veteran families, volunteers, and the teams on the front lines
+          of this mission.
         </p>
         <div className="mt-8 grid gap-8 lg:grid-cols-2">
           <div className="card overflow-hidden p-6">
@@ -354,8 +321,12 @@ export default function Homepage() {
                     />
                   </div>
                   <div>
-                    <p className="font-semibold text-white">{testimonials[activeTestimonial].name}</p>
-                    <p className="text-sm text-[var(--accent)]">{testimonials[activeTestimonial].role}</p>
+                    <p className="font-semibold text-white">
+                      {testimonials[activeTestimonial].name}
+                    </p>
+                    <p className="text-sm text-[var(--accent)]">
+                      {testimonials[activeTestimonial].role}
+                    </p>
                   </div>
                 </div>
                 <blockquote className="mt-6 text-lg leading-8 text-neutral-300">
@@ -368,7 +339,9 @@ export default function Homepage() {
                       type="button"
                       onClick={() => setActiveTestimonial(idx)}
                       className={`h-2.5 rounded-full transition ${
-                        idx === activeTestimonial ? "w-7 bg-[var(--accent)]" : "w-2.5 bg-neutral-600"
+                        idx === activeTestimonial
+                          ? "w-7 bg-[var(--accent)]"
+                          : "w-2.5 bg-neutral-600"
                       }`}
                       aria-label={`Show testimonial ${idx + 1}`}
                     />
@@ -399,11 +372,16 @@ export default function Homepage() {
         transition={{ duration: 0.5 }}
       >
         <div className="section-shell">
-          <h2 className="text-3xl font-bold tracking-tight text-white md:text-4xl">Get Involved</h2>
-          <p className="mt-3 text-neutral-400">Every contribution strengthens the mission.</p>
+          <h2 className="text-3xl font-bold tracking-tight text-white md:text-4xl">
+            {site.involved.heading}
+          </h2>
+          <p className="mt-3 text-neutral-400">{site.involved.subtitle}</p>
           <div className="mt-8 grid gap-4 md:grid-cols-3">
-            {involvedCards.map((item) => (
-              <article key={item.title} className="rounded-xl border border-[var(--brand)]/30 bg-[var(--brand)]/10 p-5">
+            {site.involved.cards.map((item) => (
+              <article
+                key={item.title}
+                className="rounded-xl border border-[var(--brand)]/30 bg-[var(--brand)]/10 p-5"
+              >
                 <h3 className="text-xl font-bold text-[var(--accent)]">{item.title}</h3>
                 <p className="mt-2 text-sm text-neutral-300">{item.text}</p>
               </article>
@@ -416,7 +394,7 @@ export default function Homepage() {
               disabled={donationLoading}
               className="rounded-md bg-[var(--accent)] px-5 py-3 font-bold uppercase tracking-wide text-[#0a0a0a] transition hover:bg-[var(--accent-light)] disabled:opacity-70"
             >
-              One-Time Donation
+              {site.involved.cta_primary}
             </button>
             <button
               type="button"
@@ -424,7 +402,7 @@ export default function Homepage() {
               disabled={donationLoading}
               className="rounded-md border border-[var(--accent)]/50 px-5 py-3 font-semibold text-[var(--accent)] transition hover:bg-[var(--accent)]/10 disabled:opacity-70"
             >
-              Monthly Support
+              {site.involved.cta_secondary}
             </button>
           </div>
         </div>
@@ -434,10 +412,8 @@ export default function Homepage() {
       <section className="section-shell py-16 md:py-20">
         <div className="grid gap-8 lg:grid-cols-2">
           <article className="card p-6">
-            <h2 className="text-2xl font-bold text-white">Mission Updates</h2>
-            <p className="mt-3 text-[var(--muted)]">
-              Receive field reports, volunteer opportunities, and impact briefings.
-            </p>
+            <h2 className="text-2xl font-bold text-white">{site.newsletter.heading}</h2>
+            <p className="mt-3 text-[var(--muted)]">{site.newsletter.description}</p>
             <form onSubmit={handleSubscribe} className="mt-5 flex flex-col gap-3 sm:flex-row">
               <label className="sr-only" htmlFor="email">
                 Email address
@@ -447,7 +423,7 @@ export default function Homepage() {
                 type="email"
                 required
                 value={subscriberEmail}
-                onChange={(event) => setSubscriberEmail(event.target.value)}
+                onChange={(e) => setSubscriberEmail(e.target.value)}
                 placeholder="you@example.com"
                 className="w-full rounded-md border border-[var(--card-border)] bg-[var(--bg)] px-4 py-3 text-[var(--text)] outline-none transition placeholder:text-neutral-600 focus:border-[var(--accent)]"
               />
@@ -462,10 +438,8 @@ export default function Homepage() {
           </article>
 
           <article id="contact" className="card p-6">
-            <h2 className="text-2xl font-bold text-white">Contact Us</h2>
-            <p className="mt-3 text-[var(--muted)]">
-              Reach out for support, partnership inquiries, or to join the team.
-            </p>
+            <h2 className="text-2xl font-bold text-white">{site.contact.heading}</h2>
+            <p className="mt-3 text-[var(--muted)]">{site.contact.description}</p>
             <form className="mt-5 space-y-3" onSubmit={handleContactSubmit}>
               <input
                 type="text"
@@ -506,26 +480,51 @@ export default function Homepage() {
         <div className="section-shell flex flex-col gap-6 md:flex-row md:items-center md:justify-between">
           <div>
             <p className="font-bold uppercase tracking-wider text-[var(--accent)]">
-              Heroes Rise Foundation
+              {site.footer.org_name}
             </p>
-            <p className="text-sm text-[var(--muted)]">
-              Standing With Those Who Stood For Us.
-            </p>
+            <p className="text-sm text-[var(--muted)]">{site.footer.tagline}</p>
           </div>
           <div className="flex flex-wrap gap-3 text-sm text-[var(--muted)]">
-            <a href={`https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(shareUrl)}`} className="transition hover:text-[var(--accent)]">
+            <a
+              href={`https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(shareUrl)}`}
+              className="transition hover:text-[var(--accent)]"
+            >
               Facebook
             </a>
-            <a href={`https://twitter.com/intent/tweet?url=${encodeURIComponent(shareUrl)}`} className="transition hover:text-[var(--accent)]">
+            <a
+              href={`https://twitter.com/intent/tweet?url=${encodeURIComponent(shareUrl)}`}
+              className="transition hover:text-[var(--accent)]"
+            >
               X / Twitter
             </a>
-            <a href={`https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent(shareUrl)}`} className="transition hover:text-[var(--accent)]">
+            <a
+              href={`https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent(shareUrl)}`}
+              className="transition hover:text-[var(--accent)]"
+            >
               LinkedIn
             </a>
-            <a href="mailto:hello@heroesrise.org" className="transition hover:text-[var(--accent)]">Email</a>
+            <a href="mailto:hello@heroesrise.org" className="transition hover:text-[var(--accent)]">
+              Email
+            </a>
           </div>
         </div>
       </footer>
     </main>
   );
+}
+
+function mergeSiteContent(base: SiteContent, incoming: Partial<SiteContent>): SiteContent {
+  const result = { ...base };
+  for (const key of Object.keys(incoming) as (keyof SiteContent)[]) {
+    const val = incoming[key];
+    if (val && typeof val === "object" && !Array.isArray(val)) {
+      (result as Record<string, unknown>)[key] = {
+        ...(base[key] as Record<string, unknown>),
+        ...(val as Record<string, unknown>)
+      };
+    } else if (val !== undefined) {
+      (result as Record<string, unknown>)[key] = val;
+    }
+  }
+  return result;
 }
