@@ -7,11 +7,18 @@ const getSql = () => {
   return neon(connectionString);
 };
 
+// Build a tagged template from a plain SQL string + params
 export const query = async <T extends QueryResultRow>(
   text: string,
   params?: unknown[]
 ): Promise<QueryResult<T>> => {
   const sql = getSql();
-  const rows = await sql.query(text, params ?? []) as unknown as T[];
+  const args = params ?? [];
+
+  // Split query into parts around $1, $2, etc. placeholders
+  // and reconstruct as tagged template literal call
+  const parts = text.split(/\$\d+/);
+  const strings = Object.assign(parts, { raw: parts }) as TemplateStringsArray;
+  const rows = (await sql(strings, ...args)) as unknown as T[];
   return { rows, rowCount: rows.length } as unknown as QueryResult<T>;
 };
