@@ -80,6 +80,7 @@ export default function AdminDashboard() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [status, setStatus] = useState("");
+  const [isSigningIn, setIsSigningIn] = useState(false);
   const [tab, setTab] = useState<Tab>("page");
 
   const [site, setSite] = useState<SiteContent>(structuredClone(defaultSiteContent));
@@ -135,23 +136,39 @@ export default function AdminDashboard() {
 
   const handleLogin = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
+    if (isSigningIn) return;
+
+    setIsSigningIn(true);
     setStatus("Signing in...");
+    const controller = new AbortController();
+    const timeoutId = window.setTimeout(() => controller.abort(), 15000);
+
     try {
       const res = await fetch("/api/auth/login", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email, password })
+        body: JSON.stringify({ email, password }),
+        signal: controller.signal
       });
-      const body = (await res.json()) as LoginResponse;
-      if (!res.ok || !body.data?.token) {
-        setStatus(body.error ?? "Login failed");
+
+      const body = (await res.json().catch(() => null)) as LoginResponse | null;
+      const authToken = body?.data?.token;
+      if (!res.ok || !authToken) {
+        setStatus(body?.error ?? "Login failed.");
         return;
       }
-      localStorage.setItem("heroes-rise-admin-token", body.data.token);
-      setToken(body.data.token);
+      localStorage.setItem("heroes-rise-admin-token", authToken);
+      setToken(authToken);
       flash("Signed in.");
-    } catch {
-      setStatus("Network error.");
+    } catch (error) {
+      if (error instanceof DOMException && error.name === "AbortError") {
+        setStatus("Login request timed out. Please try again.");
+      } else {
+        setStatus("Network error. Please try again.");
+      }
+    } finally {
+      window.clearTimeout(timeoutId);
+      setIsSigningIn(false);
     }
   };
 
@@ -276,8 +293,12 @@ export default function AdminDashboard() {
             placeholder="Password"
             className={inputClass}
           />
-          <button type="submit" className={btnPrimary}>
-            Sign In
+          <button
+            type="submit"
+            disabled={isSigningIn}
+            className={`${btnPrimary} disabled:cursor-not-allowed disabled:opacity-60`}
+          >
+            {isSigningIn ? "Signing In..." : "Sign In"}
           </button>
           <p className="text-sm text-[var(--muted)]">{status}</p>
         </form>
