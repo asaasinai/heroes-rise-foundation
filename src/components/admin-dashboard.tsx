@@ -184,7 +184,7 @@ export default function AdminDashboard() {
 
   const saveMetrics = async () => {
     flash("Saving metrics...");
-    const res = await fetch("/api/impact-metrics", {
+    const res = await fetch("/api/impact-metrics/update", {
       method: "PUT",
       headers: authHeaders(token),
       body: JSON.stringify({
