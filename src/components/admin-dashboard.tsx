@@ -81,6 +81,7 @@ export default function AdminDashboard() {
   const [password, setPassword] = useState("");
   const [status, setStatus] = useState("");
   const [isSigningIn, setIsSigningIn] = useState(false);
+  const [saving, setSaving] = useState(false);
   const [tab, setTab] = useState<Tab>("page");
 
   const [site, setSite] = useState<SiteContent>(structuredClone(defaultSiteContent));
@@ -173,17 +174,20 @@ export default function AdminDashboard() {
   };
 
   const saveSiteContent = async () => {
-    flash("Saving page content...");
+    setSaving(true);
+    flash("Saving...");
     const res = await fetch("/api/admin/content", {
       method: "PUT",
       headers: authHeaders(token),
       body: JSON.stringify({ slug: "site-content", content: site })
     });
-    flash(res.ok ? "Page content saved." : "Unable to save.");
+    setSaving(false);
+    flash(res.ok ? "✓ Page content saved!" : "Unable to save.");
   };
 
   const saveMetrics = async () => {
-    flash("Saving metrics...");
+    setSaving(true);
+    flash("Saving...");
     const res = await fetch("/api/impact-metrics/update", {
       method: "PUT",
       headers: authHeaders(token),
@@ -195,7 +199,8 @@ export default function AdminDashboard() {
         }))
       })
     });
-    flash(res.ok ? "Metrics saved." : "Unable to save metrics.");
+    setSaving(false);
+    flash(res.ok ? "✓ Metrics saved!" : "Unable to save metrics.");
   };
 
   const createStory = async (event: FormEvent<HTMLFormElement>) => {
@@ -314,6 +319,7 @@ export default function AdminDashboard() {
   ];
 
   return (
+    <>
     <main className="mx-auto max-w-5xl space-y-6 px-4 py-8">
       {/* Header */}
       <header className="flex items-center justify-between">
@@ -330,11 +336,7 @@ export default function AdminDashboard() {
         </button>
       </header>
 
-      {status && (
-        <p className="rounded-md bg-[var(--accent)]/10 px-3 py-2 text-sm font-medium text-[var(--accent)]">
-          {status}
-        </p>
-      )}
+
 
       {/* Tabs */}
       <nav className="flex gap-1 rounded-lg bg-[var(--card)] p-1">
@@ -729,8 +731,8 @@ export default function AdminDashboard() {
             </div>
           </section>
 
-          <button type="button" onClick={saveSiteContent} className={`w-full py-3 ${btnPrimary}`}>
-            Save All Page Content
+          <button type="button" onClick={saveSiteContent} disabled={saving} className={`w-full py-3 ${btnPrimary} disabled:opacity-60`}>
+            {saving ? "Saving..." : "Save All Page Content"}
           </button>
         </div>
       )}
@@ -925,14 +927,22 @@ export default function AdminDashboard() {
               >
                 + Add Metric
               </button>
-              <button type="button" onClick={saveMetrics} className={btnPrimary}>
-                Save Metrics
+              <button type="button" onClick={saveMetrics} disabled={saving} className={`${btnPrimary} disabled:opacity-60`}>
+                {saving ? "Saving..." : "Save Metrics"}
               </button>
             </div>
           </section>
         </div>
       )}
     </main>
+
+      {/* Fixed toast notification */}
+      {status && (
+        <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-50 flex items-center gap-2 rounded-lg bg-[var(--accent)] px-5 py-3 text-sm font-bold text-[#0a0a0a] shadow-xl">
+          <span>{status}</span>
+        </div>
+      )}
+    </>
   );
 }
 
