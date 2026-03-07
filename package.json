@@ -24,11 +24,7 @@
   "homepage": "https://github.com/asaasinai/heroes-rise-foundation#readme",
   "dependencies": {
     "@neondatabase/serverless": "^1.0.2",
-    "cors": "^2.8.6",
-    "express": "^5.2.1",
-    "express-rate-limit": "^8.3.0",
     "framer-motion": "^12.35.0",
-    "helmet": "^8.1.0",
     "jose": "^6.2.0",
     "next": "^16.1.6",
     "pg": "^8.20.0",
