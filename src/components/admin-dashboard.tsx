@@ -80,6 +80,7 @@ export default function AdminDashboard() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [status, setStatus] = useState("");
+  const [saving, setSaving] = useState(false);
   const [isSigningIn, setIsSigningIn] = useState(false);
   const [tab, setTab] = useState<Tab>("page");
 
@@ -173,29 +174,43 @@ export default function AdminDashboard() {
   };
 
   const saveSiteContent = async () => {
+    setSaving(true);
     flash("Saving page content...");
-    const res = await fetch("/api/admin/content", {
-      method: "PUT",
-      headers: authHeaders(token),
-      body: JSON.stringify({ slug: "site-content", content: site })
-    });
-    flash(res.ok ? "Page content saved." : "Unable to save.");
+    try {
+      const res = await fetch("/api/admin/content", {
+        method: "PUT",
+        headers: authHeaders(token),
+        body: JSON.stringify({ slug: "site-content", content: site })
+      });
+      flash(res.ok ? "Page content saved." : "Unable to save.");
+    } catch {
+      flash("Unable to save.");
+    } finally {
+      setSaving(false);
+    }
   };
 
   const saveMetrics = async () => {
+    setSaving(true);
     flash("Saving metrics...");
-    const res = await fetch("/api/impact-metrics/update", {
-      method: "PUT",
-      headers: authHeaders(token),
-      body: JSON.stringify({
-        metrics: metrics.map((m) => ({
-          metric_name: m.metric_name,
-          value: Number(m.value),
-          description: m.description
-        }))
-      })
-    });
-    flash(res.ok ? "Metrics saved." : "Unable to save metrics.");
+    try {
+      const res = await fetch("/api/impact-metrics/update", {
+        method: "PUT",
+        headers: authHeaders(token),
+        body: JSON.stringify({
+          metrics: metrics.map((m) => ({
+            metric_name: m.metric_name,
+            value: Number(m.value),
+            description: m.description
+          }))
+        })
+      });
+      flash(res.ok ? "Metrics saved." : "Unable to save metrics.");
+    } catch {
+      flash("Unable to save metrics.");
+    } finally {
+      setSaving(false);
+    }
   };
 
   const createStory = async (event: FormEvent<HTMLFormElement>) => {
@@ -314,45 +329,40 @@ export default function AdminDashboard() {
   ];
 
   return (
-    <main className="mx-auto max-w-5xl space-y-6 px-4 py-8">
-      {/* Header */}
-      <header className="flex items-center justify-between">
-        <h1 className="text-2xl font-bold text-white">Admin Dashboard</h1>
-        <button
-          type="button"
-          onClick={() => {
-            localStorage.removeItem("heroes-rise-admin-token");
-            setToken("");
-          }}
-          className={btnOutline}
-        >
-          Sign out
-        </button>
-      </header>
-
-      {status && (
-        <p className="rounded-md bg-[var(--accent)]/10 px-3 py-2 text-sm font-medium text-[var(--accent)]">
-          {status}
-        </p>
-      )}
-
-      {/* Tabs */}
-      <nav className="flex gap-1 rounded-lg bg-[var(--card)] p-1">
-        {tabs.map((t) => (
+    <>
+      <main className="mx-auto max-w-5xl space-y-6 px-4 py-8">
+        {/* Header */}
+        <header className="flex items-center justify-between">
+          <h1 className="text-2xl font-bold text-white">Admin Dashboard</h1>
           <button
-            key={t.key}
             type="button"
-            onClick={() => setTab(t.key)}
-            className={`flex-1 rounded-md px-3 py-2 text-sm font-semibold transition ${
-              tab === t.key
-                ? "bg-[var(--accent)] text-[#0a0a0a]"
-                : "text-[var(--muted)] hover:text-white"
-            }`}
+            onClick={() => {
+              localStorage.removeItem("heroes-rise-admin-token");
+              setToken("");
+            }}
+            className={btnOutline}
           >
-            {t.label}
+            Sign out
           </button>
-        ))}
-      </nav>
+        </header>
+
+        {/* Tabs */}
+        <nav className="flex gap-1 rounded-lg bg-[var(--card)] p-1">
+          {tabs.map((t) => (
+            <button
+              key={t.key}
+              type="button"
+              onClick={() => setTab(t.key)}
+              className={`flex-1 rounded-md px-3 py-2 text-sm font-semibold transition ${
+                tab === t.key
+                  ? "bg-[var(--accent)] text-[#0a0a0a]"
+                  : "text-[var(--muted)] hover:text-white"
+              }`}
+            >
+              {t.label}
+            </button>
+          ))}
+        </nav>
 
       {/* ─── Page Content Tab ─── */}
       {tab === "page" && (
@@ -729,8 +739,13 @@ export default function AdminDashboard() {
             </div>
           </section>
 
-          <button type="button" onClick={saveSiteContent} className={`w-full py-3 ${btnPrimary}`}>
-            Save All Page Content
+          <button
+            type="button"
+            onClick={saveSiteContent}
+            disabled={saving}
+            className={`w-full py-3 ${btnPrimary} disabled:opacity-60`}
+          >
+            {saving ? "Saving..." : "Save All Page Content"}
           </button>
         </div>
       )}
@@ -925,14 +940,26 @@ export default function AdminDashboard() {
               >
                 + Add Metric
               </button>
-              <button type="button" onClick={saveMetrics} className={btnPrimary}>
-                Save Metrics
+              <button
+                type="button"
+                onClick={saveMetrics}
+                disabled={saving}
+                className={`${btnPrimary} disabled:opacity-60`}
+              >
+                {saving ? "Saving..." : "Save Metrics"}
               </button>
             </div>
           </section>
         </div>
       )}
-    </main>
+      </main>
+      {status && (
+        <div className="fixed bottom-6 left-1/2 z-50 flex -translate-x-1/2 items-center gap-2 rounded-lg bg-[var(--accent)] px-5 py-3 text-sm font-bold text-[#0a0a0a] shadow-xl animate-in fade-in slide-in-from-bottom-2">
+          <span>✓</span>
+          <span>{status}</span>
+        </div>
+      )}
+    </>
   );
 }
 
