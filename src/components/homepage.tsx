@@ -161,7 +161,7 @@ export default function Homepage() {
       <header className="sticky top-0 z-30 border-b border-[var(--card-border)] bg-[#0a0a0a]/95 backdrop-blur">
         <div className="section-shell flex h-16 items-center justify-between">
           <a href="#top" aria-label="Heroes Rise Foundation">
-            <Image src="/heroes-rise-logo.png" alt="Heroes Rise Foundation" width={220} height={57} priority className="h-10 w-auto" />
+            <Image src="/heroes-rise-logo.png" alt="Heroes Rise Foundation" width={320} height={83} priority className="h-14 w-auto" />
           </a>
           <nav className="hidden gap-6 text-sm text-[var(--muted)] md:flex">
             {navLinks.map((link) => (
